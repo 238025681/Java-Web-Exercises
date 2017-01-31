@@ -1,13 +1,11 @@
 package firstcgi;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.Reader;
-import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URL;
 import java.net.URLDecoder;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
@@ -20,18 +18,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
 import java.util.StringTokenizer;
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
 
 public class Utils {
-    private static boolean isPost() {
-        String requestMethod = System.getProperty("cgi.request_method").toLowerCase();
-        boolean isPost = false;
-        if (requestMethod.equals("post")) {
-            isPost = true;
-        }
-        return isPost;
-    }
 
     public static Map<String, String> getParameters(InputStream inputStream) throws IOException {
         String inBuffer;
@@ -63,22 +51,34 @@ public class Utils {
         }
         );
         lines.add(JSONdata.toString());
-        Path file = Paths.get(Utils.class.getResource("database.csv").toURI());
+        
+        new File("database.csv").createNewFile();
+        Path file = Paths.get(new File("database.csv").toURI());
+        
         Files.write(file, lines, Charset.forName("UTF-8"), StandardOpenOption.APPEND);
     }
 
     public static List<String> search(Map<String, String> article) throws IOException, URISyntaxException {
         ArrayList<String> result = new ArrayList<String>();
         if (article.containsKey("search")) {
-            Path file = Paths.get(Utils.class.getResource("database.csv").toURI());
+            Path file = Paths.get(new File("database.csv").toURI());
             List<String> dataBase = Files.readAllLines(file, Charset.forName("UTF-8"));
             dataBase.forEach(action -> {
-                if (action.toLowerCase().contains(((String)article.get("search")).toLowerCase())) {
+                if (action.toLowerCase().contains(((String) article.get("search")).toLowerCase())) {
                     result.add(action.substring(0, action.length() - 1));
                 }
             }
             );
         }
         return result;
+    }
+
+    private static boolean isPost() {
+        String requestMethod = System.getProperty("cgi.request_method").toLowerCase();
+        boolean isPost = false;
+        if (requestMethod.equals("post")) {
+            isPost = true;
+        }
+        return isPost;
     }
 }
